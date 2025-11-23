@@ -1,5 +1,5 @@
 # Binaries
-dbbackup
+dbbackups
 *.exe
 *.exe~
 *.dll
