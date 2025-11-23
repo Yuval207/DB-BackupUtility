@@ -63,5 +63,5 @@ notify:
 
 ## Project URL
 ```bash
-https://github.com/Yuval207/DB-BackupUtility
+https://roadmap.sh/projects/database-backup-utility
 ```
