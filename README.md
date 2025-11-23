@@ -61,5 +61,7 @@ notify:
 ./dbbackup restore <backup_file_name> --config config.yaml
 ```
 
-## License
-MIT
+## Project URL
+```bash
+https://github.com/Yuval207/DB-BackupUtility
+```
