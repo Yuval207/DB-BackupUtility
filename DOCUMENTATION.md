@@ -11,6 +11,7 @@ The project follows a modular architecture using Go's standard layout.
 2.  **Manager Layer (`internal/backup`, `internal/restore`)**: Orchestrates the business logic. It connects the Database and Storage components.
 3.  **Provider Layer (`internal/database`, `internal/storage`)**: Implements specific logic for each database and storage type behind common interfaces.
 4.  **Support Layer (`internal/config`, `internal/logger`, `internal/notifier`)**: Provides utilities for configuration, logging, and notifications.
+5.  **Containerization (`Dockerfile`)**: A multi-stage Docker setup combining the compiled Go binary with the necessary external client tools (`mysql-client`, `postgresql-client`, `mongodb-tools`).
 
 ## 3. Directory Structure & File Responsibilities
 
@@ -28,6 +29,7 @@ Contains database implementations.
 -   `mysql.go`: MySQL implementation. Uses `mysqldump` and `mysql` binaries.
 -   `postgres.go`: PostgreSQL implementation. Uses `pg_dump` and `psql` binaries. Handles `sslmode` and custom tool paths.
 -   `mongodb.go`: MongoDB implementation. Uses `mongodump` and `mongorestore` binaries.
+-   `d1.go`: Cloudflare D1 implementation. Uses `npx wrangler d1` to run commands remotely via Cloudflare APIs.
 
 ### `internal/storage/`
 Contains storage implementations.
@@ -88,14 +90,14 @@ The `config.yaml` file drives the behavior of the tool.
 
 ```yaml
 database:
-  type: postgres          # Options: mysql, postgres, mongodb
-  host: localhost
-  port: 5432
-  user: myuser
-  password: mypassword
-  dbname: mydb
+  type: postgres          # Options: mysql, postgres, mongodb, d1
+  host: localhost         # Not needed for d1
+  port: 5432              # Not needed for d1
+  user: myuser            # Not needed for d1
+  password: mypassword    # Not needed for d1
+  dbname: mydb            # D1 requires the database name (e.g., 'testing-db')
   extra_params: "sslmode=require"  # Optional: Extra connection params
-  tool_path: "/usr/bin/pg_dump"    # Optional: Path to the dump binary
+  tool_path: ""           # Optional: Path to the dump binary or command like `npx`
 
 storage:
   type: s3                # Options: local, s3, gcs, azure
@@ -109,4 +111,21 @@ backup:
 
 notify:
   slack_webhook_url: "..." # Optional: Slack Webhook URL
+}
 ```
+
+## 6. Docker Containerization
+The tool is fully containerized using a multi-stage `Dockerfile`. 
+
+### Image Structure
+1.  **Builder Stage (`golang:1.25-alpine`)**: Copies the source code, downloads dependencies via `go mod download`, and compiles the CLI binary.
+2.  **Runtime Stage (`alpine:latest`)**: 
+    - Installs the required database tools: `mysql-client`, `postgresql-client`, and `mongodb-tools`.
+    - Copies the compiled binary from the builder stage.
+    - Uses the DB tools to establish external connection pipelines.
+
+### Docker Execution Flow
+When running via Docker (`docker run --rm ...`), the CLI behaves identically to a local execution, with the sole difference being that volume mounts (`-v`) must be provided so the container can:
+1. Access the `config.yaml` file on the host machine.
+2. Read from or write to local files if the `local` storage provider is selected.
+3. Map any necessary cloud provider credentials files to paths internally accessible by the container.

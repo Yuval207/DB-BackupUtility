@@ -21,6 +21,8 @@ func getComponents(cfg config.Config) (database.Database, storage.Storage, error
 		db = database.NewPostgres(cfg.Database)
 	case "mongodb":
 		db = database.NewMongoDB(cfg.Database)
+	case "d1":
+		db = database.NewD1(cfg.Database)
 	default:
 		return nil, nil, fmt.Errorf("unsupported database type: %s", cfg.Database.Type)
 	}

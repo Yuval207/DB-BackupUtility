@@ -9,7 +9,7 @@ type Config struct {
 }
 
 type DatabaseConfig struct {
-	Type     string `mapstructure:"type"` // mysql, postgres, mongodb
+	Type     string `mapstructure:"type"` // mysql, postgres, mongodb, d1
 	Host     string `mapstructure:"host"`
 	Port     int    `mapstructure:"port"`
 	User     string `mapstructure:"user"`
