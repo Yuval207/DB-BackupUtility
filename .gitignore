@@ -33,3 +33,8 @@ config.yaml
 *.sql.gz
 *.archive
 *.archive.gz
+backups/
+
+# Built Application Binaries
+dbbackup
+dbbackup.exe
